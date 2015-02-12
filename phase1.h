@@ -14,13 +14,13 @@
 #define RESET "\033[0m"
 #define NUM_THREADS 20
 
-#define EMPTY -1
 #define U 0
 #define S 1
 #define TS 2
 
-#define RUNNING 3
-#define READY 4
+#define RUNNING 1
+#define READY 0
+#define EMPTY 0
 
 typedef struct job{
 	pthread_t thread;

@@ -38,12 +38,9 @@ int main (int argc, char *argv[]){
 
    //Initialize the cluster
    job* cluster = (job *)malloc(sizeof(job) * 2);
-   cluster[0] = cluster[1] = emptyJob;
    while(TRUE){
       //If there is an open spot in the cluster
-      if(cluster[0].class == EMPTY && cluster[1].class == EMPTY){
-
-
+      if(cluster[0].state == READY && cluster[1].class == READY){
       }
 
    }
@@ -98,6 +95,27 @@ void add_job(job* rootJob, job jobToAdd){
    }
 }
 
+void remove_job(job *rootJob, job *jobToRemove){
+   job* jobPointer = rootJob;
+   job* previousPointer = NULL;
+   if(jobPointer -> id == jobToRemove -> id){
+      rootJob = rootJob -> next;
+      free(jobToRemove);
+      return;
+   }
+   //Traverse to the correct spot in the list
+   while(jobPointer -> next != NULL){
+      previousPointer = jobPointer;
+      jobPointer = jobPointer->next;
+      if( jobPointer -> id == jobToRemove -> id){
+         previousPointer -> next = jobPointer -> next;
+         free(jobToRemove);
+         return;
+      }
+   }
+   printf(RESET "ERROR: failed to remove: no job with id %d exists\n", jobToRemove->id );
+}
+
 //Print out a list of active jobs
 void print_jobs(job* rootJob){
    job* jobPointer = rootJob;
@@ -113,10 +131,18 @@ void print_jobs(job* rootJob){
 }
 
 //Runs the job for a random amount of time
-void *run_job(job *runJob) {
+void *run_job(job *rootJob, job *runJob) {
    int runTime = (rand() % 1750000) + 250000;
    printf("Thread %d with status %d will run for %d microsecs", runJob->id, runJob->class, runTime);
+   remove_job(rootJob, runJob);
+   runJob -> state = RUNNING;
    usleep( runTime );
+   runJob -> state = READY;
+
+   //Delay to add the job back into the queue
+   int delay = (rand() % 2000000) + 1000000;
+   usleep( delay );
+   add_job(rootJob, *runJob);
    pthread_yield();
 }
 
