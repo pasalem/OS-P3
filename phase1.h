@@ -29,15 +29,11 @@ typedef struct job{
 	struct job *next;
 } job;
 
-pthread_t threads[NUM_THREADS];
-job job_list[NUM_THREADS];
-pthread_mutex_t cluster_lock[2];
-
-int cluster_0_process = -1;
-int cluster_1_process = -1;
 job *rootJob;
-int cluster = 0;
+
+pthread_t threads[NUM_THREADS];
+pthread_t cluster[2];
+
+pthread_mutex_t cluster_lock[2];
 pthread_mutex_t queue_lock = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t cluster_0_lock = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t cluster_1_lock = PTHREAD_MUTEX_INITIALIZER;
 
