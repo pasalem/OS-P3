@@ -19,6 +19,12 @@ int main (int argc, char *argv[]){
    int index;
    job jobToAdd;
 
+   //Make our dispatcher threads (one for each cluster)
+   for(index = 0; index < 2; index++){
+      printf("Created cluster %d\n", index);
+      pthread_create(&cluster[index], NULL, cluster_dispatcher,(void*)(long)index);
+   }
+
    //Make our worker threads and add them to the queue
    for(index = 0; index < NUM_THREADS; index++){
       int type;
@@ -37,12 +43,8 @@ int main (int argc, char *argv[]){
       usleep(rand() % 100000);  
    }
 
-   //Make our dispatcher threads (one for each cluster)
-   for(index = 0; index < 2; index++){
-      printf("Created cluster %d\n", index);
-      pthread_create(&cluster[index], NULL, cluster_dispatcher,(void*)(long)index);
-   }
-
+   cluster_0_process = 10;
+   cluster_1_process = 11;
    while(TRUE){
 
    }
@@ -67,7 +69,9 @@ job create_job(int id, int class, pthread_t thread){
    newJob -> class = class;
    newJob -> state = READY;
    newJob -> cond = malloc(sizeof(pthread_cond_t));
+   newJob -> mutex = malloc(sizeof(pthread_mutex_t));
    pthread_cond_init(newJob->cond, NULL);
+   pthread_mutex_init(newJob->mutex, NULL);
    return *newJob;
 }
 
@@ -78,7 +82,6 @@ void add_job(job* rootJob, job jobToAdd){
       printf(RESET "Not enough memory to allocate for this job, aborting");
       exit(1);
    }
-
    newJob -> class = jobToAdd.class;
    newJob -> id = jobToAdd.id;
    newJob -> state = READY;
@@ -131,18 +134,16 @@ void *run_job(void* process){
    int index = (long)process;
    job jobToRun = job_list[index];
    while(TRUE){
-      printf("Thread %d ready to begin working\n", index);
-
-      pthread_mutex_lock(&mutex);
-      while( (cluster_0_process != jobToRun.id) || (cluster_1_process != jobToRun.id) ){
+      pthread_mutex_lock(jobToRun.mutex);
+      while( (cluster_0_process != jobToRun.id) && (cluster_1_process != jobToRun.id) ){
          printf("Thread %d blocked\n", jobToRun.id);
-         pthread_cond_wait(jobToRun.cond, &mutex);
+         pthread_cond_wait(jobToRun.cond, jobToRun.mutex);
       }
-
+      //One of the clusters is running the process at this point
       int runTime = (rand() % 1750000) + 250000;
       printf("Thread %d will run for %d microsecs\n", jobToRun.id, runTime);
       usleep( runTime );
-      pthread_mutex_unlock(&mutex);
+      pthread_mutex_unlock(jobToRun.mutex);
    }
 }
 
@@ -150,23 +151,19 @@ void *run_job(void* process){
 void *cluster_dispatcher(void* index){
    int id = (long)index;
    while(TRUE){
-      pthread_mutex_lock(&mutex);
-      job jobToRun = job_list[0];
+      pthread_mutex_lock(&cluster_mutex);
       switch(id){
          case 0:
-            cluster_0_process = jobToRun.id;
+            if(cluster_0_process >= 0)
+               pthread_cond_signal(job_list[cluster_0_process].cond);
             break;
          case 1:
-            cluster_1_process = jobToRun.id;
+            if(cluster_1_process >= 0)
+               pthread_cond_signal(job_list[cluster_1_process].cond);
             break;
          default:
-            printf("We are running on a nonexistant cluster. Sheeeeeetttt");
             exit(1);
-            break;
       }
-
-      printf("Cluster %d running process 0\n", id);
-      pthread_cond_signal(jobToRun.cond);
-      pthread_mutex_unlock(&mutex);
+      pthread_mutex_unlock(&cluster_mutex);
    }
 }

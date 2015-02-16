@@ -25,6 +25,7 @@
 
 typedef struct job{
 	pthread_cond_t *cond;
+	pthread_mutex_t *mutex;
 	int id;
 	int class;
 	int state;
@@ -38,4 +39,7 @@ pthread_t cluster[2];
 
 int cluster_0_process = -1;
 int cluster_1_process = -1;
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+int test = 0;
+
+//pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t cluster_mutex = PTHREAD_MUTEX_INITIALIZER;
