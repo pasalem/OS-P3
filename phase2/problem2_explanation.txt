@@ -1,0 +1,7 @@
+Phase 1:
+This intersection would be controlled by a semaphore that would be flipped up by the car that is going through the intersection, and then when it has finished, it would put the semaphore down so that the next car to arrive at the intersection could go. This method is suboptimal, because only one car may pass through the intersection at a time. 
+
+Phase 2:
+This system will cause a deadlock, because whatever lane of traffic got into the intersection first will completely block the perpendicular lanes from crossing. If you were to actually use a system like this, you could permit each lane to run for a certain amount of time (like a traffic like for a single lane on one side), and then stop them, then switch to another lane. This is also inefficient, as some cars in other lanes could be going.
+
+
