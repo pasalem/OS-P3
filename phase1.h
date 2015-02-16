@@ -5,6 +5,7 @@
 #include <string.h>
 #include <errno.h>
 #include <sysexits.h>
+#include <stdint.h>
 
 #define TRUE 1
 #define FALSE 0
@@ -35,5 +36,6 @@ pthread_t threads[NUM_THREADS];
 job job_list[NUM_THREADS];
 pthread_t cluster[2];
 
-int wakeup = -1;
+int cluster_0_process = -1;
+int cluster_1_process = -1;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
