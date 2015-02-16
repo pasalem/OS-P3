@@ -15,6 +15,8 @@ int main (int argc, char *argv[]){
    //Seed our rand() function 
    srand(time(NULL));
    int index;
+   pthread_mutex_init(&cluster_lock[0], NULL);
+   pthread_mutex_init(&cluster_lock[1], NULL);
    job *jobToAdd = malloc(sizeof(job));
 
    //Make our worker threads and add them to the queue
@@ -34,28 +36,26 @@ int main (int argc, char *argv[]){
       job_list[index] = *jobToAdd;
       usleep(rand() % 100000);  
    }
-
-  while(TRUE){
+   while(TRUE){
       job *next_job = get_next_eligible_job();
-      pthread_mutex_lock(next_job->mutex);
+      pthread_mutex_lock(&cluster_lock[cluster]);
       cluster_0_process = next_job -> id;
-      printf("Waking up process %d\n", next_job -> id);
       pthread_cond_signal(next_job->cond);
-      pthread_mutex_unlock(next_job->mutex);
+      pthread_mutex_unlock(&cluster_lock[cluster]);
    }
 }
 
 job *get_next_eligible_job(){
    pthread_mutex_lock(&queue_lock);
-   printf("Next job took the lock\n");
+   //printf("Next job took the lock\n");
    if(rootJob -> next != NULL){
       pthread_mutex_unlock(&queue_lock);
-      printf("Next job released the lock\n");
+      //printf("Next job released the lock\n");
       return rootJob->next;
    }
    printf(KRED "Could not find an eligable job to run!\n" RESET);
    pthread_mutex_unlock(&queue_lock);
-   printf("Next job released the lock\n");
+   //printf("Next job released the lock\n");
    exit(1);
 }
 
@@ -77,26 +77,27 @@ job *create_job(int id, int class){
 void add_job(job *jobToAdd){
    pthread_mutex_lock(&queue_lock);
    jobToAdd -> next = NULL;
-   printf("Add took the lock\n");
+   //printf("Add took the lock\n");
    if(rootJob -> next == NULL){
       printf("Added job with ID %d\n", jobToAdd->id);
       rootJob -> next = jobToAdd;
       pthread_mutex_unlock(&queue_lock);
-      printf("Add released the lock\n");
+      //printf("Add released the lock\n");
    } else{
       job *current = rootJob;
       while( (current -> next) != NULL){
          current = (current -> next);
       }
+      printf("Added thread %d back into the queue\n", jobToAdd->id);
       current -> next = jobToAdd;
       pthread_mutex_unlock(&queue_lock);
-      printf("Add released the lock\n");
+      //printf("Add released the lock\n");
    }
 }
 
 void remove_job(job *jobToRemove){
    pthread_mutex_lock(&queue_lock);
-   printf("Remove took the lock\n");
+   //printf("Remove took the lock\n");
    job* jobPointer = rootJob;
    job* previousPointer = NULL;
 
@@ -105,10 +106,9 @@ void remove_job(job *jobToRemove){
       previousPointer = jobPointer;
       jobPointer = jobPointer->next;
       if( jobPointer -> id == jobToRemove -> id){
-         printf("Removed job %d successfully\n", jobToRemove->id);
          previousPointer -> next = (jobPointer -> next);
          pthread_mutex_unlock(&queue_lock);
-         printf("Remove released the lock\n");
+         //printf("Remove released the lock\n");
          return;
       }
    }
@@ -136,21 +136,20 @@ void print_jobs(){
 void *run_job(void* process){;
    job *jobToRun = (job *)process;
    while(TRUE){
-      pthread_mutex_lock(jobToRun->mutex);
+      pthread_mutex_lock(&cluster_lock[cluster]);
       while( cluster_0_process != jobToRun->id && cluster_1_process != jobToRun->id){
          printf("Job %d blocked\n", jobToRun -> id);
-         pthread_cond_wait(jobToRun->cond, jobToRun->mutex);
+         pthread_cond_wait(jobToRun->cond, &cluster_lock[cluster]);
       }
       int runTime = (rand() % 1750000) + 250000;
-      printf("Thread %d will run for %d microsecs\n", jobToRun->id, runTime);
+      printf(KBLU "Thread %d will run for %d microsecs on cluster %d\n" RESET, jobToRun->id, runTime, cluster);
       remove_job(jobToRun);
       usleep( runTime );
+      printf(KRED "Thread %d finished running from cluster %d\n" RESET, jobToRun->id, cluster);
+      pthread_mutex_unlock(&cluster_lock[cluster]);
 
-      int delay = (rand() % 1750000) + 250000;
-      printf("Delaying %d before going back into the queue\n", delay);
+      int delay = (rand() % 5000000) + 1000000;
       usleep( delay );
       add_job(jobToRun);
-      pthread_cond_wait(jobToRun->cond, jobToRun->mutex);
-      pthread_mutex_unlock(jobToRun->mutex);
    }
 }
