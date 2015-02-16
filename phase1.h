@@ -26,25 +26,13 @@ typedef struct job{
 	int id;
 	int class;
 	int state;
-	struct job *previous;
 	struct job *next;
 } job;
-
-typedef struct cluster{
-	pthread_cond_t *cond;
-	pthread_mutex_t *mutex;
-	int id;
-	job *current_job;
-} cluster;
-
-
 
 pthread_t threads[NUM_THREADS];
 job job_list[NUM_THREADS];
 
-pthread_t cluster_threads[NUM_CLUSTERS];
-cluster cluster_list[NUM_CLUSTERS];
-
 int cluster_0_process = -1;
 int cluster_1_process = -1;
-pthread_mutex_t cluster_mutex = PTHREAD_MUTEX_INITIALIZER;
+job *rootJob;
+pthread_mutex_t queue_lock = PTHREAD_MUTEX_INITIALIZER;
