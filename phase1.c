@@ -5,77 +5,56 @@ void add_job(job* rootJob, job jobToAdd);
 void print_jobs(job *rootJob);
 void recycle_top_job(job *rootJob);
 job create_job(int id, int class, pthread_t thread);
-job get_next_eligible_job(job* rootJob, job* cluster);
-void *run_job(job *rootJob, job *runJob, job* cluster);
+job get_next_eligible_job(job* rootJob);
+void *run_job(void * arg);
 
 int main (int argc, char *argv[]){
-   pthread_t unclassified, secret, top_secret;
+   pthread_t thread;
+
    job *rootJob = malloc(sizeof(job));
    rootJob -> id = -1;
-   job emptyJob;
-   emptyJob.class = EMPTY;
 
    //Seed our rand() function 
    srand(time(NULL));
 
-   //Make our threads
+   //Make our threads and add them to the queue
    int index;
    job jobToAdd;
    for(index = 0; index < NUM_THREADS; index++){
+      int type;
       if(index >= 0 && index < 8){
-         //printf("Making unclassified thread %d\n", index);
-         pthread_create(&unclassified, NULL, run_job, NULL);
-         jobToAdd = create_job(index, U, unclassified); 
-         add_job(rootJob, jobToAdd);
+         type = U;
       } else if(index >= 8 && index < 14){
-         //printf("Making secret thread %d\n", index);
-         pthread_create(&secret, NULL, run_job, NULL);
-         jobToAdd = create_job(index, S, secret); 
-         add_job(rootJob, jobToAdd);
+         type = S;
       } else{
-         //printf("Making top secret thread %d\n", index);
-         pthread_create(&top_secret, NULL, run_job, NULL); 
-         jobToAdd = create_job(index, TS, top_secret); 
-         add_job(rootJob, jobToAdd);
-      }
-   }
-
-   //Initialize the cluster
-   job* cluster = (job *)malloc(sizeof(job) * 2);
-   int num_open_spots = 2;
-   while(TRUE){
-      //If there is an open spot in the cluster
-      if(num_open_spots > 0){
-         job jobToRun = get_next_eligible_job(rootJob, cluster);
-         if(cluster[0].state == READY){
-            //wake up jobToRun
-            //run_job(rootJob, &jobToRun, cluster);
-         }
+         type = TS;
       }
 
+      //Create the job/thread, delay before adding it
+      jobToAdd = create_job(index, type, thread);
+      job_list[index] = jobToAdd;
+      pthread_create(&threads[index], NULL, run_job, &jobToAdd);
+      usleep(rand() % 1000000);  
+      add_job(rootJob, jobToAdd);
    }
+
+
+   
+   job jobToRun = job_list[10];
+      pthread_mutex_lock(&jobToRun.mutex);
+      pthread_cond_broadcast(&jobToRun.cond);
+      pthread_mutex_unlock(&jobToRun.mutex);
+   
 
    print_jobs(rootJob);
-   pthread_exit(NULL);
 }
 
-job get_next_eligible_job(job* rootJob, job* cluster){
-      //This will run whenever there is an open spot in the cluster
-      int state_looking_for;
-      if( cluster[0].class == U || cluster[1].class == U){
-         state_looking_for = U;
-      } else{
-         state_looking_for = S;
-      }
-
+job get_next_eligible_job(job* rootJob){
    job *current = rootJob;
    while(current -> next != NULL){
       current = current -> next;
-      if( current->class  == state_looking_for ){
-         printf("Looking for job with state %d, found job %d with state %d\n", state_looking_for, current->id, current->class);
          return *current;
       }
-   }
    printf(KRED "Could not find an eligable job to run! %d\n" RESET, current->class );
    exit(1);
 }
@@ -85,8 +64,9 @@ job create_job(int id, int class, pthread_t thread){
    job *newJob = (job *)malloc(sizeof(job));
    newJob -> id = id;
    newJob -> class = class;
-   newJob -> thread = thread;
    newJob -> state = READY;
+   pthread_cond_init(&newJob->cond, NULL);
+   pthread_mutex_init(&newJob->mutex, NULL);
    return *newJob;
 }
 
@@ -100,7 +80,6 @@ void add_job(job* rootJob, job jobToAdd){
 
    newJob -> class = jobToAdd.class;
    newJob -> id = jobToAdd.id;
-   newJob -> thread = jobToAdd.thread;
    newJob -> state = READY;
    newJob -> next = NULL;
 
@@ -146,17 +125,16 @@ void print_jobs(job* rootJob){
 }
 
 //Runs the job for a random amount of time
-void *run_job(job *rootJob, job *runJob) {
-   int runTime = (rand() % 1750000) + 250000;
-   printf("Thread %d with status %d will run for %d microsecs\n", runJob->id, runJob->class, runTime);
-   remove_job(rootJob, runJob);
-   runJob -> state = RUNNING;
-   usleep( runTime );
-   runJob -> state = READY;
+void *run_job(void* process){
+   job *jobToRun = ((job *) process);
+   while(TRUE){
+      printf("Thread %d ready to begin working\n", jobToRun->id);
+      pthread_mutex_lock(&jobToRun->mutex);
+      pthread_cond_wait(&jobToRun->cond, &jobToRun->mutex);
+      int runTime = (rand() % 1750000) + 250000;
+      printf("Thread %d will run for %d microsecs\n", jobToRun->id, runTime);
+      usleep( runTime );
 
-   //Delay to add the job back into the queue
-   int delay = (rand() % 2000000) + 1000000;
-   usleep( delay );
-   add_job(rootJob, *runJob);
-   pthread_yield();
+      pthread_mutex_unlock(&jobToRun->mutex);
+   }
 }

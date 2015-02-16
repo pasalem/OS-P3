@@ -23,10 +23,14 @@
 #define EMPTY 0
 
 typedef struct job{
-	pthread_t thread;
+	pthread_mutex_t mutex;
+	pthread_cond_t cond;
 	int id;
 	int class;
 	int state;
 	struct job *previous;
 	struct job *next;
 } job;
+
+pthread_t threads[NUM_THREADS];
+job job_list[NUM_THREADS];
