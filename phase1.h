@@ -23,8 +23,7 @@
 #define EMPTY 0
 
 typedef struct job{
-	pthread_mutex_t mutex;
-	pthread_cond_t cond;
+	pthread_cond_t *cond;
 	int id;
 	int class;
 	int state;
@@ -34,3 +33,7 @@ typedef struct job{
 
 pthread_t threads[NUM_THREADS];
 job job_list[NUM_THREADS];
+pthread_t cluster[2];
+
+int wakeup = -1;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
