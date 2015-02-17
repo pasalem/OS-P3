@@ -107,8 +107,8 @@ job *create_job(int id, int class){
    newJob -> id = id;
    newJob -> class = class;
    newJob -> next = NULL;
-   //newJob -> previous = (job *)malloc(sizeof(job));
-   //newJob -> next = (job *)malloc(sizeof(job));
+   newJob -> previous = (job *)malloc(sizeof(job));
+   newJob -> next = (job *)malloc(sizeof(job));
 
    if(class == U){
       newJob -> cat = U;
@@ -126,17 +126,13 @@ job *create_job(int id, int class){
 //Add a thread to the queue
 void add_job(job *jobToAdd){
    pthread_mutex_lock(&queue_lock);
-   if(jobToAdd -> class == TS){
-      ts_jobs[ts_count] = jobToAdd;
-      ts_count++;
-      printf("Added a TS job\n");
-   }
 
    jobToAdd -> next = NULL;
    if(rootJob -> next == NULL){
       rootJob -> next = jobToAdd;
       jobToAdd -> previous = NULL;
       pthread_mutex_unlock(&queue_lock);
+      return;
    } else{
       job *current = rootJob;
       while( (current -> next) != NULL){
@@ -150,45 +146,47 @@ void add_job(job *jobToAdd){
       }
       pthread_mutex_unlock(&queue_lock);
    }
-
-   if(ts_count >= 3){
-         //count_TS();
-   }
+   count_TS();
 }
 
 void move_front(job *jobToAdd){
-   pthread_mutex_lock(&queue_lock);
+   if(rootJob -> next == jobToAdd){
+      return;
+   }
    if(rootJob -> next == NULL){
-      rootJob -> next = jobToAdd;
-      jobToAdd -> next = NULL;
-      jobToAdd -> previous = rootJob;
-      pthread_mutex_unlock(&queue_lock);
+      add_job(jobToAdd);
+      return;
    } else{
+      remove_job(jobToAdd);
+      pthread_mutex_lock(&queue_lock);
       job *temp = rootJob -> next;
       rootJob -> next = jobToAdd;
-      (jobToAdd->previous)->next = (jobToAdd->next);
       jobToAdd -> next = temp;
-
+      temp -> previous = jobToAdd;
+      jobToAdd -> previous = NULL;
       pthread_mutex_unlock(&queue_lock);
    }
 }
 
 void count_TS(){
+   int ts_count = 0;
+   job *ts_jobs[6];
+   job *current = rootJob;
+   while(current -> next != NULL){
+      current = current->next;
+      if(current -> class == TS){
+         ts_jobs[ts_count] = current;
+         ts_count++;
+      }
+   }
    if(ts_count >= 3){
-      printf("More than 3 TS Jobs -- counted %d\n", ts_count);
-      move_front(ts_jobs[0]);
-      move_front(ts_jobs[1]);
-      print_jobs();
+      move_front(ts_jobs[ts_count-1]);
+      move_front(ts_jobs[ts_count-2]);
    }
 }
 
 void remove_job(job *jobToRemove){
    pthread_mutex_lock(&queue_lock);
-   //job* previousPointer = NULL;
-
-   if(jobToRemove -> class == TS){
-      ts_count--;
-   }
    if( jobToRemove -> previous != NULL){
       (jobToRemove -> previous) -> next = (jobToRemove -> next);
       if( jobToRemove -> next != NULL){
@@ -197,7 +195,9 @@ void remove_job(job *jobToRemove){
    //Previous is root
    } else{
       rootJob -> next = jobToRemove -> next;
-      (jobToRemove -> next) -> previous = NULL;
+      if(jobToRemove -> next != NULL){
+         (jobToRemove -> next) -> previous = NULL;
+      }
    }
    pthread_mutex_unlock(&queue_lock);
 }
@@ -210,8 +210,10 @@ void print_jobs(){
       printf(RESET "No active jobs running \n");
       return;
    }
+   if( jobPointer -> next == jobPointer || jobPointer -> previous == jobPointer){
+      return;
+   }
    int i;
-   printf("%d TS jobs in queue\n", ts_count);
    while(jobPointer -> next != NULL){
       jobPointer = jobPointer->next;
       printf(KCYN "Thread %d" RESET, jobPointer->id);
@@ -253,8 +255,8 @@ void *run_job(void* process){
       jobToRun -> state = IDLE;
       pthread_mutex_unlock(&cluster_lock[cluster]);
 
-      //3 seconds + (0 to 5 seconds) + 2 seconds if secret or top secret
-      int delay = (rand() % 2000000) + (jobToRun->cat * 2000000) + 1000000;
+      //3 seconds + (0 to 5 seconds) + 4 seconds if secret or top secret + 2 seconds base
+      int delay = (rand() % 3000000) + (jobToRun->cat * 4000000) + 1000000;
       usleep( delay );
       add_job(jobToRun);
    }
