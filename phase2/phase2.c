@@ -4,6 +4,7 @@
 #include <semaphore.h>
 #include <pthread.h>
 #include "phase2.h"
+void print_jobs();
 
 void *queue_dispatcher(void *direction){
 	long int from_direction = (long int) direction;
@@ -78,6 +79,35 @@ int main(){
 		pthread_create(&threads[index], NULL, drive,(void*)vehicle);
 		usleep(rand() % 100000);  
 	}
+	print_jobs();
+}
+
+
+//Print out a list of active jobs
+void print_jobs(){
+   car* jobPointer = direction_queue[0];
+   if(jobPointer -> next == NULL){
+      printf(RESET "No active jobs running \n");
+      return;
+   }
+   if( jobPointer -> next == jobPointer || jobPointer -> previous == jobPointer){
+      return;
+   }
+   int i;
+   while(jobPointer -> next != NULL){
+      jobPointer = jobPointer->next;
+      printf(KCYN "Thread %d" RESET, jobPointer->id);
+      if( jobPointer -> previous != NULL){
+         printf(" with previous %d", jobPointer -> previous -> id);
+      } else{
+         printf(" with previous pointer NULL");
+      }
+      if( jobPointer -> next != NULL){
+         printf(" and next %d\n", jobPointer -> next -> id);
+      } else{
+         printf(" and next NULL\n");
+      }
+   }
 }
 
 

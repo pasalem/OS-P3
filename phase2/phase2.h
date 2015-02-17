@@ -16,6 +16,10 @@
 #define WEST 3
 
 #define NUM_THREADS 20
+#define KBLU  "\x1B[34m"
+#define KCYN  "\x1B[36m"
+#define KRED  "\x1B[31m"
+#define RESET "\033[0m"
 
 
 #define LEFT 3
