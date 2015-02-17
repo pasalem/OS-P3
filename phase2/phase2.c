@@ -16,7 +16,7 @@ void *queue_dispatcher(void *direction){
 int main(){
 	long int direction = 0;
 	for(direction = 0; direction < 4; direction++){
-		pthread_create(&queue[direction], NULL, queue_dispatcher, (void *)direction);
+		pthread_create(&queue_thread[direction], NULL, queue_dispatcher, (void *)direction);
 	}
 }
 

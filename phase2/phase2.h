@@ -27,5 +27,19 @@
 
 
 pthread_t threads[NUM_THREADS];
-pthread_t queue[4];
+pthread_t queue_thread[4];
 sem_t queue_sem[4];
+
+
+typedef struct dir_queue{
+	sem_t *car_sem;
+	struct dir_queue *next;
+} dir_queue;
+
+dir_queue* north;
+dir_queue* south;
+dir_queue* east;
+dir_queue* west;
+
+
+
