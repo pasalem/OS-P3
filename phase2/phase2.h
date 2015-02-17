@@ -22,7 +22,7 @@
 #define RESET "\033[0m"
 
 
-#define LEFT 3
+#define LEFT 0
 #define RIGHT 1
 #define STRAIGHT 2
 
@@ -42,5 +42,6 @@ pthread_t queue_thread[4];
 car *direction_queue[4];
 sem_t queue_sem[4];
 sem_t direction_sem[4];
+sem_t quadrant_sem[4];
 
 

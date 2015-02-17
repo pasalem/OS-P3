@@ -35,22 +35,34 @@ void *drive(void* automobile){
       //Wake up the appropriate intersection
       sem_post(&(direction_sem[from_direction]));
       add_car(vehicle);
-      print_queue( direction_queue[0] );
-      sleep(10);
       switch(from_direction){
          case NORTH:
-            //printf("Car %d is entering the intersection from the North\n", vehicle->id);
+            printf("Car %d has arrived at the intersection from the North\n", vehicle->id);
             break;
          case SOUTH:
-            //printf("Car %d is entering the intersection from the South\n", vehicle->id);
+            printf("Car %d has arrived at the intersection from the South\n", vehicle->id);
             break;
          case EAST:
-            //printf("Car %d is entering the intersection from the East\n", vehicle->id);
+            printf("Car %d has arrived at the intersection from the East\n", vehicle->id);
             break;
          case WEST:
-            //printf("Car %d is entering the intersection from the West\n", vehicle->id);
+            printf("Car %d has arrived at the intersection from the West\n", vehicle->id);
             break;
       }
+      sem_wait(vehicle -> sem);
+      int turn_direction = (rand() % 3);
+      switch(turn_direction){
+         case LEFT:
+            printf("Car %d has entered the intersection and wants to turn left\n", vehicle->id);
+            break;
+         case RIGHT:
+            printf("Car %d has entered the intersection and wants to turn right\n", vehicle->id);
+            break;
+         case STRAIGHT:
+            printf("Car %d has entered the intersection and wants to continue straight\n", vehicle->id);
+            break;
+      }
+      usleep( (rand() % 3000000) + 1000000 );
 	}
 }
 
@@ -83,6 +95,7 @@ int main(){
 	for(direction = 0; direction < 4; direction++){
       sem_init(&direction_sem[direction], 0, 0);
       sem_init(&queue_sem[direction], 0, 0);
+      sem_init(&quadrant_sem[direction], 0, 0);
       direction_queue[direction] = (car *)malloc(sizeof(car));
 		pthread_create(&queue_thread[direction], NULL, queue_dispatcher, (void *)direction);
 	}
@@ -90,7 +103,6 @@ int main(){
 	//Make our worker threads and add them to the queue
 	long int index = 0;
 	for(index = 0; index < NUM_THREADS; index++){
-		printf("Made thread for car %ld\n", index);
 		car *queue = direction_queue[index % 5];
 		queue = (car *)malloc( sizeof(car) );
 		car *vehicle = create_car(index);
@@ -99,17 +111,18 @@ int main(){
 	}
 }
 
+//Print the job queue
 void print_queue(car* queue){
    car* current = queue;
    //Traverse to the end of the list
    if(current -> next == NULL){
-      printf(RESET "No active jobs running \n");
+      printf(RESET "No active cars at this intersection \n");
       return;
    }
    int i;
    while(current -> next != NULL){
       current = current->next;
-      printf(KCYN "Thread %d" RESET, current->id);
+      printf(KCYN "Car %d" RESET, current->id);
       if( current -> previous != NULL){
          printf(" with previous %d", current -> previous -> id);
       } else{
@@ -120,6 +133,53 @@ void print_queue(car* queue){
       } else{
          printf(" and next NULL\n");
       }
+   }
+}
+
+
+void turn_car(car *vehicle, int turn_direction)
+{
+   switch(vehicle -> from_direction ){
+   case NORTH:
+      switch(turn_direction){
+         case LEFT:
+            break;
+         case RIGHT:
+            break;
+         case STRAIGHT:
+            break;
+      }
+      break;
+   case SOUTH:
+      switch(turn_direction){
+         case LEFT:
+            break;
+         case RIGHT:
+            break;
+         case STRAIGHT:
+            break;
+      }
+      break;
+   case EAST:
+      switch(turn_direction){
+         case LEFT:
+            break;
+         case RIGHT:
+            break;
+         case STRAIGHT:
+            break;
+      }
+      break;
+   case WEST:
+      switch(turn_direction){
+         case LEFT:
+            break;
+         case RIGHT:
+            break;
+         case STRAIGHT:
+            break;
+      }
+      break;
    }
 }
 
