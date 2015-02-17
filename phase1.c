@@ -88,12 +88,11 @@ job *get_next_eligible_job(job *cluster_0_process, job* cluster_1_process){
          }
          current = current -> next;
       }
-      sleep(1);
-      printf("Looking for %d\n", cat_looking_for);
-      print_jobs();
-      return get_next_eligible_job(cluster_0_process, cluster_1_process);
-
+      //We are here if the loop found nothing
+      //print_jobs();
       pthread_mutex_unlock(&queue_lock);
+      return rootJob -> next;
+
       printf("Failed to find a valid process to run in the queue\n");
       print_jobs();
       exit(1);
@@ -188,7 +187,7 @@ void *run_job(void* process){
    while(TRUE){
       pthread_mutex_lock(&begin_lock);
       while( cluster_0_process != jobToRun && cluster_1_process != jobToRun){
-         printf("Job %d blocked\n", jobToRun -> id);
+         //printf("Job %d blocked\n", jobToRun -> id);
          pthread_cond_wait(jobToRun->cond, &begin_lock);
       }
       pthread_mutex_unlock(&begin_lock);
@@ -205,7 +204,7 @@ void *run_job(void* process){
       jobToRun -> state = IDLE;
       pthread_mutex_unlock(&cluster_lock[cluster]);
 
-      int delay = (rand() % 5000000) + 1000000;
+      int delay = (rand() % 5000000) + (jobToRun->cat * 3000000);
       usleep( delay );
       add_job(jobToRun);
    }
