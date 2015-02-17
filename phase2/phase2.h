@@ -40,12 +40,7 @@ typedef struct car{
 pthread_t threads[NUM_THREADS];
 pthread_t queue_thread[4];
 car *direction_queue[4];
+sem_t queue_sem[4];
 sem_t direction_sem[4];
-
-
-car *north_queue;
-car *south_queue;
-car *east_queue;
-car *west_queue;
 
 

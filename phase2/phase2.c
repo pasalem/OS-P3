@@ -5,6 +5,7 @@
 #include <pthread.h>
 #include "phase2.h"
 void print_jobs();
+void add_car(car *vehicle);
 
 void *queue_dispatcher(void *direction){
 	long int from_direction = (long int) direction;
@@ -31,6 +32,9 @@ void *drive(void* automobile){
    car *vehicle = (car *)automobile; 
    while(TRUE){
       int from_direction = vehicle -> from_direction;
+      //Wake up the appropriate intersection
+      sem_post(&(direction_sem[from_direction]));
+      add_car(vehicle);
       switch(from_direction){
          case NORTH:
             printf("Car %d is entering the intersection from the North\n", vehicle->id);
@@ -49,13 +53,12 @@ void *drive(void* automobile){
 }
 
 //Add a thread to the provided queue
-void add_car(car *vehicle, car* queue){
-   //sem_wait(vehicle -> sem);
+void add_car(car *vehicle){
+   car *queue = direction_queue[vehicle -> from_direction];
    vehicle -> next = NULL;
    if(queue -> next == NULL){
       queue -> next = vehicle;
       vehicle -> previous = NULL;
-      //sem_post(vehicle -> sem);
       return;
    } else{
       car *current = queue;
@@ -68,7 +71,6 @@ void add_car(car *vehicle, car* queue){
          current -> next = vehicle;
          vehicle -> previous = current;
       }
-      //sem_post(vehicle -> sem);
    }
 }
 
@@ -78,6 +80,8 @@ int main(){
 	long int direction = 0;
 	for(direction = 0; direction < 4; direction++){
       sem_init(&direction_sem[direction], 0, 0);
+      sem_init(&queue_sem[direction], 0, 0);
+      direction_queue[direction] = (car *)malloc(sizeof(car));
 		pthread_create(&queue_thread[direction], NULL, queue_dispatcher, (void *)direction);
 	}
 
@@ -88,7 +92,6 @@ int main(){
 		car *queue = direction_queue[index % 5];
 		queue = (car *)malloc( sizeof(car) );
 		car *vehicle = create_car(index);
-		add_car(vehicle, queue);
 		pthread_create(&threads[index], NULL, drive,(void*)vehicle);
 		usleep(rand() % 100000);  
 	}
