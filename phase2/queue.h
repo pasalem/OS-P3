@@ -6,7 +6,7 @@ struct queueJob{
 	int pid;
 	int priority;
 	int approach;
-	int direction;
+	int turn_direction;
 	struct queueJob *nextPtr; /* Pointer to next job in queue */
 };
 

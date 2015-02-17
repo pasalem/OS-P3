@@ -6,7 +6,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "queueInit.h"
+#include "queue.h"
 
 // Defined Constants
 #define NW 0
@@ -22,9 +22,9 @@
 #define THREADS 20
 #define TIMESLICE 200
 
-#define TURN_LEFT 3
-#define TURN_RIGHT 1
-#define TURN_STRAIGHT 2
+#define LEFT 3
+#define RIGHT 1
+#define STRAIGHT 2
 
 // Global Variables
 pthread_mutex_t nw;
@@ -32,7 +32,7 @@ pthread_mutex_t ne;
 pthread_mutex_t se;
 pthread_mutex_t sw;
 
-// Initialize the four direction queues
+// Initialize the direction queues
 queuePointer sNptr = NULL;
 queuePointer eNptr = NULL;
 
@@ -53,7 +53,7 @@ int intersection[2][2];
 //Fuction Declarations
 void initialize_values();
 void loop();
-void make_cars();
+void create_cars();
 int run_lottery(int tickets);
 void naptime();
 void *create_thread(void *idPtr);
@@ -65,7 +65,7 @@ int main(){
 	int i = 0; // Counter
 
 	//Create cars
-	make_cars();
+	create_cars();
 
 	return 0;
 }
@@ -104,31 +104,31 @@ void loop(){
 }
 
 // Creates car nodes/threads
-void make_cars(){
+void create_cars(){
 	int i = 0;
 	int approach;
-	int direction;
+	int turn_direction;
 	pthread_t car;
 
 	for(i = 0; i < THREADS; i++){
 		approach = run_lottery(4);
-		direction = run_lottery(3);
+		turn_direction = run_lottery(3);
 		pthread_create(&car, NULL, create_thread, &numArray[i]);
 
 		if(approach == NORTH){
-			add_job(&sNptr, &eNptr, car, i, 0, NORTH, direction);
+			add_job(&sNptr, &eNptr, car, i, 0, NORTH, turn_direction);
 			nQueue++;
 		}
 		else if(approach == SOUTH){
-			add_job(&sSptr, &eSptr, car, i, 0, SOUTH, direction);
+			add_job(&sSptr, &eSptr, car, i, 0, SOUTH, turn_direction);
 			sQueue++;
 		}
 		else if(approach == EAST){
-			add_job(&sEptr, &eEptr, car, i, 0, EAST, direction);
+			add_job(&sEptr, &eEptr, car, i, 0, EAST, turn_direction);
 			eQueue++;
 		}
 		else if(approach == WEST){
-			add_job(&sWptr, &eWptr, car, i, 0, WEST, direction);
+			add_job(&sWptr, &eWptr, car, i, 0, WEST, turn_direction);
 			wQueue++;
 		}
 	}
@@ -175,14 +175,14 @@ int check_deadlock(){
 }
 
 // Returns 0 if car has finished driving, -1 if the car could not drive
-// Note: MUST check for a deadlock situation BEFORE sending a car to drive!
-int drive(int id, int approach, int direction){
+// Checks if there is a deadlock before running
+int drive(int id, int approach, int turn_direction){
 	int whileSwitch = 1;
 
 	// Determine approach direction
 	if(approach == NORTH){
 		// Determine where car is turning
-		if(direction == TURN_LEFT){
+		if(turn_direction == LEFT){
 			while(whileSwitch){ // Tries to enter intersection
 				if(pthread_mutex_trylock(&nw) == 0){
 					whileSwitch = 0;
@@ -220,7 +220,7 @@ int drive(int id, int approach, int direction){
 			pthread_mutex_unlock(&se);
 		}
 
-		else if(direction == TURN_RIGHT){
+		else if(turn_direction == RIGHT){
 			while(whileSwitch){ // Try to enter intersection, wait until it can
 				if(pthread_mutex_trylock(&nw) == 0){
 					whileSwitch = 0;
@@ -233,7 +233,7 @@ int drive(int id, int approach, int direction){
 			pthread_mutex_unlock(&nw);
 		}
 
-		else if(direction == TURN_STRAIGHT){
+		else if(direction == STRAIGHT){
 			while(whileSwitch){ // Tries to enter intersection
 				if(pthread_mutex_trylock(&nw) == 0){
 					whileSwitch = 0;
@@ -263,7 +263,7 @@ int drive(int id, int approach, int direction){
 
 	else if(approach == SOUTH){
 		// Determine where car is turning
-		if(direction == TURN_LEFT){
+		if(turn_direction == LEFT){
 			while(whileSwitch){ // Tries to enter intersection
 				if(pthread_mutex_trylock(&se) == 0){
 					whileSwitch = 0;
@@ -301,7 +301,7 @@ int drive(int id, int approach, int direction){
 			pthread_mutex_unlock(&nw);
 		}
 
-		else if(direction == TURN_RIGHT){
+		else if(turn_direction == RIGHT){
 			while(whileSwitch){ // Try to enter intersection, wait until it can
 				if(pthread_mutex_trylock(&se) == 0){
 					whileSwitch = 0;
@@ -314,7 +314,7 @@ int drive(int id, int approach, int direction){
 			pthread_mutex_unlock(&se);
 		}
 
-		else if(direction == TURN_STRAIGHT){
+		else if(turn_direction == STRAIGHT){
 			while(whileSwitch){ // Tries to enter intersection
 				if(pthread_mutex_trylock(&se) == 0){
 					whileSwitch = 0;
@@ -344,7 +344,7 @@ int drive(int id, int approach, int direction){
 
 	else if(approach == EAST){
 		// Determine where car is turning
-		if(direction == TURN_LEFT){
+		if(turn_direction == LEFT){
 			while(whileSwitch){ // Tries to enter intersection
 				if(pthread_mutex_trylock(&ne) == 0){
 					whileSwitch = 0;
@@ -382,7 +382,7 @@ int drive(int id, int approach, int direction){
 			pthread_mutex_unlock(&sw);
 		}
 
-		else if(direction == TURN_RIGHT){
+		else if(turn_direction == RIGHT){
 			while(whileSwitch){ // Try to enter intersection, wait until it can
 				if(pthread_mutex_trylock(&ne) == 0){
 					whileSwitch = 0;
@@ -395,7 +395,7 @@ int drive(int id, int approach, int direction){
 			pthread_mutex_unlock(&ne);
 		}
 
-		else if(direction == TURN_STRAIGHT){
+		else if(turn_direction == STRAIGHT){
 			while(whileSwitch){ // Tries to enter intersection
 				if(pthread_mutex_trylock(&ne) == 0){
 					whileSwitch = 0;
@@ -425,7 +425,7 @@ int drive(int id, int approach, int direction){
 
 	else if(approach == WEST){
 		// Determine where car is turning
-		if(direction == TURN_LEFT){
+		if(turn_direction == LEFT){
 			while(whileSwitch){ // Tries to enter intersection
 				if(pthread_mutex_trylock(&sw) == 0){
 					whileSwitch = 0;
@@ -463,7 +463,7 @@ int drive(int id, int approach, int direction){
 			pthread_mutex_unlock(&se);
 		}
 
-		else if(direction == TURN_RIGHT){
+		else if(turn_direction == RIGHT){
 			while(whileSwitch){ // Try to enter intersection, wait until it can
 				if(pthread_mutex_trylock(&sw) == 0){
 					whileSwitch = 0;
@@ -476,7 +476,7 @@ int drive(int id, int approach, int direction){
 			pthread_mutex_unlock(&sw);
 		}
 
-		else if(direction == TURN_STRAIGHT){
+		else if(turn_direction == STRAIGHT){
 			while(whileSwitch){ // Tries to enter intersection
 				if(pthread_mutex_trylock(&sw) == 0){
 					whileSwitch = 0;

@@ -1,6 +1,6 @@
 all: phase2
 
-phase2: queue.o phase2.o queue.h
+phase2: phase2.o queue.o queue.h
 	gcc -o phase2 phase2.o queue.o -lpthread
 
 queue.o: queue.c queue.h
