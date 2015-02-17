@@ -32,9 +32,12 @@ typedef struct job{
 	int state;
 	int cluster;
 	struct job *next;
+	struct job *previous;
 } job;
 
 job *rootJob;
+int ts_count = 0;
+job *ts_jobs[6];
 
 pthread_t threads[NUM_THREADS];
 pthread_t cluster[2];
