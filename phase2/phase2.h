@@ -25,21 +25,23 @@
 #define TRUE 1
 #define FALSE 0
 
+typedef struct car{
+	sem_t *sem;
+	int id;
+	int from_direction;
+	int to_direction;
+	struct car *next;
+	struct car *previous;
+} car;
 
 pthread_t threads[NUM_THREADS];
 pthread_t queue_thread[4];
-sem_t queue_sem[4];
+car *direction_queue[4];
 
 
-typedef struct dir_queue{
-	sem_t *car_sem;
-	struct dir_queue *next;
-} dir_queue;
-
-dir_queue* north;
-dir_queue* south;
-dir_queue* east;
-dir_queue* west;
-
+car *north_queue;
+car *south_queue;
+car *east_queue;
+car *west_queue;
 
 
