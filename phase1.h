@@ -19,13 +19,18 @@
 #define U 0
 #define S 1
 #define TS 2
+#define ANY -1
+#define RUNNING 1
+#define IDLE 0
 
 typedef struct job{
 	pthread_cond_t *cond;
 	pthread_mutex_t *mutex;
 	int id;
+	int cat;
 	int class;
 	int state;
+	int cluster;
 	struct job *next;
 } job;
 
@@ -36,4 +41,9 @@ pthread_t cluster[2];
 
 pthread_mutex_t cluster_lock[2];
 pthread_mutex_t queue_lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t begin_lock = PTHREAD_MUTEX_INITIALIZER;
+job *cluster_0_process;
+job *cluster_1_process;
+
+int begin = FALSE;
 
