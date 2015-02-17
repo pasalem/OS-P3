@@ -39,6 +39,7 @@ job *rootJob;
 
 pthread_t threads[NUM_THREADS];
 pthread_t cluster[2];
+int ts_count = 0;
 
 pthread_mutex_t cluster_lock[2];
 pthread_mutex_t queue_lock = PTHREAD_MUTEX_INITIALIZER;

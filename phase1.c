@@ -63,7 +63,11 @@ job *get_next_eligible_job(job *cluster_0_process, job* cluster_1_process){
          //0 empty
          if( cluster_1_process -> state == IDLE){
             //Both empty
-            cat_looking_for = rand()%1;
+            if( ts_count >= 3){
+               cat_looking_for = S;
+            } else{
+               cat_looking_for = rand()%1;
+            }
          }else{
             //0 empty, 1 occupied
             if( cluster_1_process -> cat == U){
@@ -169,7 +173,8 @@ void move_front(job *jobToAdd){
 }
 
 void count_TS(){
-   int ts_count = 0;
+   pthread_mutex_lock(&queue_lock);
+   ts_count = 0;
    job *ts_jobs[6];
    job *current = rootJob;
    while(current -> next != NULL){
@@ -179,6 +184,7 @@ void count_TS(){
          ts_count++;
       }
    }
+   pthread_mutex_unlock(&queue_lock);
    if(ts_count >= 3){
       move_front(ts_jobs[ts_count-1]);
       move_front(ts_jobs[ts_count-2]);
@@ -256,7 +262,7 @@ void *run_job(void* process){
       pthread_mutex_unlock(&cluster_lock[cluster]);
 
       //3 seconds + (0 to 5 seconds) + 4 seconds if secret or top secret + 2 seconds base
-      int delay = (rand() % 3000000) + (jobToRun->cat * 4000000) + 1000000;
+      int delay = (rand() % 3000000) + (jobToRun->cat * 2000000) + 4000000;
       usleep( delay );
       add_job(jobToRun);
    }
