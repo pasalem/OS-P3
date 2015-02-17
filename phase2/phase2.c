@@ -18,8 +18,7 @@ void *queue_dispatcher(void *direction){
 car *create_car(int id){
    car *new_car = (car *)malloc(sizeof(car));
    new_car -> id = id;
-   new_car -> from_direction = id%5;
-   new_car -> to_direction = 2;
+   new_car -> from_direction = rand()%4;
    new_car -> previous = (car *)malloc(sizeof(car));
    new_car -> next = (car *)malloc(sizeof(car));
    new_car -> sem = malloc(sizeof(sem_t));
@@ -31,6 +30,21 @@ car *create_car(int id){
 void *drive(void* automobile){
    car *vehicle = (car *)automobile; 
    while(TRUE){
+      int from_direction = vehicle -> from_direction;
+      switch(from_direction){
+         case NORTH:
+            printf("Car %d is entering the intersection from the North\n", vehicle->id);
+            break;
+         case SOUTH:
+            printf("Car %d is entering the intersection from the South\n", vehicle->id);
+            break;
+         case EAST:
+            printf("Car %d is entering the intersection from the East\n", vehicle->id);
+            break;
+         case WEST:
+            printf("Car %d is entering the intersection from the West\n", vehicle->id);
+            break;
+      }
 	}
 }
 
@@ -61,10 +75,9 @@ void add_car(car *vehicle, car* queue){
 int main(){
 	//Seed our rand() function 
 	srand(time(NULL));
-
-
 	long int direction = 0;
 	for(direction = 0; direction < 4; direction++){
+      sem_init(&direction_sem[direction], 0, 0);
 		pthread_create(&queue_thread[direction], NULL, queue_dispatcher, (void *)direction);
 	}
 
@@ -79,35 +92,6 @@ int main(){
 		pthread_create(&threads[index], NULL, drive,(void*)vehicle);
 		usleep(rand() % 100000);  
 	}
-	print_jobs();
-}
-
-
-//Print out a list of active jobs
-void print_jobs(){
-   car* jobPointer = direction_queue[0];
-   if(jobPointer -> next == NULL){
-      printf(RESET "No active jobs running \n");
-      return;
-   }
-   if( jobPointer -> next == jobPointer || jobPointer -> previous == jobPointer){
-      return;
-   }
-   int i;
-   while(jobPointer -> next != NULL){
-      jobPointer = jobPointer->next;
-      printf(KCYN "Thread %d" RESET, jobPointer->id);
-      if( jobPointer -> previous != NULL){
-         printf(" with previous %d", jobPointer -> previous -> id);
-      } else{
-         printf(" with previous pointer NULL");
-      }
-      if( jobPointer -> next != NULL){
-         printf(" and next %d\n", jobPointer -> next -> id);
-      } else{
-         printf(" and next NULL\n");
-      }
-   }
 }
 
 

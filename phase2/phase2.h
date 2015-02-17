@@ -33,7 +33,6 @@ typedef struct car{
 	sem_t *sem;
 	int id;
 	int from_direction;
-	int to_direction;
 	struct car *next;
 	struct car *previous;
 } car;
@@ -41,6 +40,7 @@ typedef struct car{
 pthread_t threads[NUM_THREADS];
 pthread_t queue_thread[4];
 car *direction_queue[4];
+sem_t direction_sem[4];
 
 
 car *north_queue;
