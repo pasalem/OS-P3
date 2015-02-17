@@ -4,7 +4,7 @@
 #include <semaphore.h>
 #include <pthread.h>
 #include "phase2.h"
-void print_jobs();
+void print_queue(car* queue);
 void add_car(car *vehicle);
 
 void *queue_dispatcher(void *direction){
@@ -35,18 +35,20 @@ void *drive(void* automobile){
       //Wake up the appropriate intersection
       sem_post(&(direction_sem[from_direction]));
       add_car(vehicle);
+      print_queue( direction_queue[0] );
+      sleep(10);
       switch(from_direction){
          case NORTH:
-            printf("Car %d is entering the intersection from the North\n", vehicle->id);
+            //printf("Car %d is entering the intersection from the North\n", vehicle->id);
             break;
          case SOUTH:
-            printf("Car %d is entering the intersection from the South\n", vehicle->id);
+            //printf("Car %d is entering the intersection from the South\n", vehicle->id);
             break;
          case EAST:
-            printf("Car %d is entering the intersection from the East\n", vehicle->id);
+            //printf("Car %d is entering the intersection from the East\n", vehicle->id);
             break;
          case WEST:
-            printf("Car %d is entering the intersection from the West\n", vehicle->id);
+            //printf("Car %d is entering the intersection from the West\n", vehicle->id);
             break;
       }
 	}
@@ -96,6 +98,31 @@ int main(){
 		usleep(rand() % 100000);  
 	}
 }
+
+void print_queue(car* queue){
+   car* current = queue;
+   //Traverse to the end of the list
+   if(current -> next == NULL){
+      printf(RESET "No active jobs running \n");
+      return;
+   }
+   int i;
+   while(current -> next != NULL){
+      current = current->next;
+      printf(KCYN "Thread %d" RESET, current->id);
+      if( current -> previous != NULL){
+         printf(" with previous %d", current -> previous -> id);
+      } else{
+         printf(" with previous pointer NULL");
+      }
+      if( current -> next != NULL){
+         printf(" and next %d\n", current -> next -> id);
+      } else{
+         printf(" and next NULL\n");
+      }
+   }
+}
+
 
 
 
