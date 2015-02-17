@@ -8,7 +8,7 @@
 
 #include "queue.h"
 
-/* Adds a job to the end of the queue. */
+// Add a job to the end of the queue
 void add_job(queuePointer *sPtr, queuePointer *ePtr, pthread_t newJob, int id, int priority, int approach, int turn_direction){
 	queuePointer newPtr;
 	queuePointer prevPtr;
@@ -46,7 +46,7 @@ void add_job(queuePointer *sPtr, queuePointer *ePtr, pthread_t newJob, int id, i
 		}
 	}
 	else{
-		// Failed to add job. Exit function.
+		// If job fails to add
 		printf("Failed to add job.\n");
 	}
 
@@ -77,12 +77,12 @@ void add_front(queuePointer *sPtr, pthread_t newJob, int id, int priority, int a
 			currentPtr = currentPtr->nextPtr;
 		}
 
-		/* Adds to beginning */
+		// Adds job to the beginning
 		newPtr->nextPtr = *sPtr;
 		*sPtr = newPtr;
 	}
 	else{
-		// Failed to add job. Exit function.
+		// If job fails to add
 		printf("Failed to add job.\n");
 	}
 

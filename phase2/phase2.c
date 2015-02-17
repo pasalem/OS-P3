@@ -60,6 +60,12 @@ void *create_thread(void *idPtr);
 int check_deadlock();
 int drive(int id, int approach, int turn_direction);
 
+
+
+// TODO: Emergency vehicle situation
+
+
+
 int main(){
 
 	int i = 0; // Counter
@@ -71,7 +77,7 @@ int main(){
 }
 
 void initialize_values(){
-	int i = 0; int j = 0;// Counter
+	int i = 0; int j = 0;	// Counters
 
 	// Initialize mutexes for intersection quadrants
 	pthread_mutex_init(&nw, NULL);
@@ -111,10 +117,12 @@ void create_cars(){
 	pthread_t car;
 
 	for(i = 0; i < THREADS; i++){
-		approach = run_lottery(4);
-		turn_direction = run_lottery(3);
-		pthread_create(&car, NULL, create_thread, &numArray[i]);
+		approach = run_lottery(4);			// Randomly decides approach
+		turn_direction = run_lottery(3);	// Randomly decides its turn direction
 
+		pthread_create(&car, NULL, create_thread, &numArray[i]);	// Create car thread
+
+		// Add jobs to queues based on where they are coming from
 		if(approach == NORTH){
 			add_job(&sNptr, &eNptr, car, i, 0, NORTH, turn_direction);
 			nQueue++;
@@ -134,18 +142,16 @@ void create_cars(){
 	}
 }
 
-/* Randomly selects a 'ticket' from the alloted pool */
+// Takes in a number of total 'tickets', or numbers, and picks a random one  (4 = 0 to 3)
 int run_lottery(int tickets){
 	int selected;
 
-	selected = rand()%tickets;
-
-	//printf("The ticket is %d\n", selected);
+	selected = rand()%tickets; // Random selection
 
 	return selected;
 }
 
-/* Thread creation function */
+// Thread creation function 
 void *create_thread(void *idPtr){
 
 	int id = *((int *)idPtr); // Copies ID
@@ -154,7 +160,7 @@ void *create_thread(void *idPtr){
 	// TODO: Drive function implemented here
 }
 
-/* Makes threads sleep for a while before going back to queue */
+// Makes threads sleep before re-entering queue
 void naptime(){
 	int randomNum;
 
@@ -163,6 +169,7 @@ void naptime(){
 	sleep(randomNum);
 }
 
+// Check for potential deadlock
 // Returns 0 if there is no deadlock situation, -1 if a deadlock is imminent
 int check_deadlock(){
 	//  TODO: Deadlock when:
@@ -174,8 +181,8 @@ int check_deadlock(){
 	return 0;
 }
 
-// Returns 0 if car has finished driving, -1 if the car could not drive
 // Checks if there is a deadlock before running
+// Returns 0 if car has finished driving, -1 if the car couldn't go
 int drive(int id, int approach, int turn_direction){
 	int whileSwitch = 1;
 
