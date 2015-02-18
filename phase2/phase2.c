@@ -6,6 +6,7 @@
 #include "phase2.h"
 void print_queue(car* queue);
 void add_car(car *vehicle);
+void turn_car(car *vehicle, int turn_direction);
 
 void *queue_dispatcher(void *direction){
 	long int from_direction = (long int) direction;
@@ -62,7 +63,18 @@ void *drive(void* automobile){
             printf("Car %d has entered the intersection and wants to continue straight\n", vehicle->id);
             break;
       }
+
+      int status = 0;
+      while(status == 0)
+      {
+         if(status == 0)
+            pthread_yield();
+         status = check_intersection(vehicle, turn_direction);
+      }
+      turn_car(vehicle, turn_direction);
+
       usleep( (rand() % 3000000) + 1000000 );
+
 	}
 }
 
@@ -135,6 +147,7 @@ void print_queue(car* queue){
       }
    }
 }
+
 /*
       NORTH
      -----------
@@ -144,7 +157,6 @@ WEST | SW | SE |
      -----------
           SOUTH
 */
-
 void turn_car(car *vehicle, int turn_direction)
 {
    switch(vehicle -> from_direction ){
@@ -233,6 +245,84 @@ void turn_car(car *vehicle, int turn_direction)
             sem_post( &quadrant_sem[SW] );
             usleep( (rand() % 1000000) + 1000000 );
             sem_post( &quadrant_sem[SE] );
+            break;
+      }
+      break;
+   }
+}
+
+/*
+      NORTH
+     -----------
+     | NW | NE | EAST
+     |---------| 
+WEST | SW | SE |
+     -----------
+          SOUTH
+*/
+ int check_intersection(car *vehicle, int turn_direction){
+   switch(vehicle -> from_direction ){
+      case NORTH:
+      switch(turn_direction){
+         case LEFT:
+         if( !sem_trywait( &quadrant_sem[NW] ) 
+            && !sem_trywait( &quadrant_sem[SW] ) 
+            && !sem_trywait( &quadrant_sem[SE] ) ){ return 1;} else {return 0;}
+            break;
+         case RIGHT:
+         if( !sem_trywait( &quadrant_sem[NW] ) ){ return 1;} else {return 0;}
+         break;
+         case STRAIGHT:
+         if( !sem_trywait( &quadrant_sem[NW] ) 
+            && !sem_trywait( &quadrant_sem[SW] ) ){ return 1;} else {return 0;}
+            break;
+      }
+      break;
+      case SOUTH:
+      switch(turn_direction){
+         case LEFT:
+         if( !sem_trywait( &quadrant_sem[SE] ) 
+            && !sem_trywait( &quadrant_sem[NE] ) 
+            && !sem_trywait( &quadrant_sem[NW] ) ){ return 1;} else {return 0;}
+            break;
+         case RIGHT:
+         if( !sem_trywait( &quadrant_sem[SE] ) ){ return 1;} else {return 0;}
+         break;
+         case STRAIGHT:
+         if( !sem_trywait( &quadrant_sem[SE] ) 
+            && !sem_trywait( &quadrant_sem[NE] ) ){ return 1;} else {return 0;}
+            break;
+      }
+      break;
+      case EAST:
+      switch(turn_direction){
+         case LEFT:
+         if( !sem_trywait( &quadrant_sem[NE] ) 
+            && !sem_trywait( &quadrant_sem[NW] ) 
+            && !sem_trywait( &quadrant_sem[SW] ) ){ return 1;} else {return 0;}
+            break;
+         case RIGHT:
+         if( !sem_trywait( &quadrant_sem[NE] ) ){ return 1;} else {return 0;}
+         break;
+         case STRAIGHT:
+         if( !sem_trywait( &quadrant_sem[NE] ) 
+            && !sem_trywait( &quadrant_sem[NW] ) ){ return 1;} else {return 0;}
+            break;
+      }
+      break;
+      case WEST:
+      switch(turn_direction){
+         case LEFT:
+         if( !sem_trywait( &quadrant_sem[SW] ) 
+            && !sem_trywait( &quadrant_sem[SE] ) 
+            && !sem_trywait( &quadrant_sem[NE] ) ){ return 1;} else {return 0;}
+            break;
+         case RIGHT:
+         if( !sem_trywait( &quadrant_sem[SW] ) ){ return 1;} else {return 0;}
+         break;
+         case STRAIGHT:
+         if( !sem_trywait( &quadrant_sem[SW] ) 
+            && !sem_trywait( &quadrant_sem[SE] ) ){ return 1;} else {return 0;}
             break;
       }
       break;
