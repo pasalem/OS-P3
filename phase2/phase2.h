@@ -6,14 +6,15 @@
 #include <time.h>
 #include <unistd.h>
 
-#define NW 0
-#define NE 1
-#define SE 2
-#define SW 3
 #define NORTH 0
 #define SOUTH 1
 #define EAST 2
 #define WEST 3
+
+#define NW 0
+#define NE 1
+#define SE 2
+#define SW 3
 
 #define NUM_THREADS 20
 #define KBLU  "\x1B[34m"

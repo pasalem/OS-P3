@@ -135,7 +135,15 @@ void print_queue(car* queue){
       }
    }
 }
-
+/*
+      NORTH
+     -----------
+     | NW | NE | EAST
+     |---------| 
+WEST | SW | SE |
+     -----------
+          SOUTH
+*/
 
 void turn_car(car *vehicle, int turn_direction)
 {
@@ -143,40 +151,88 @@ void turn_car(car *vehicle, int turn_direction)
    case NORTH:
       switch(turn_direction){
          case LEFT:
+            usleep( (rand() % 1000000) + 1000000 );
+            sem_post( &quadrant_sem[NW] );
+            usleep( (rand() % 1000000) + 1000000 );
+            sem_post( &quadrant_sem[SW] );
+            usleep( (rand() % 1000000) + 1000000 );
+            sem_post( &quadrant_sem[SE] );
             break;
          case RIGHT:
+            usleep( (rand() % 1000000) + 1000000 );
+            sem_post( &quadrant_sem[NW] );
             break;
          case STRAIGHT:
+            usleep( (rand() % 1000000) + 1000000 );
+            sem_post( &quadrant_sem[NW] );
+            usleep( (rand() % 1000000) + 1000000 );
+            sem_post( &quadrant_sem[SW] );
             break;
       }
       break;
    case SOUTH:
       switch(turn_direction){
          case LEFT:
+            usleep( (rand() % 1000000) + 1000000 );
+            sem_post( &quadrant_sem[SE] );
+            usleep( (rand() % 1000000) + 1000000 );
+            sem_post( &quadrant_sem[NE] );
+            usleep( (rand() % 1000000) + 1000000 );
+            sem_post( &quadrant_sem[NW] );
             break;
          case RIGHT:
+            usleep( (rand() % 1000000) + 1000000 );
+            sem_post( &quadrant_sem[SE] );
             break;
          case STRAIGHT:
+            usleep( (rand() % 1000000) + 1000000 );
+            sem_post( &quadrant_sem[SE] );
+            usleep( (rand() % 1000000) + 1000000 );
+            sem_post( &quadrant_sem[NE] );
             break;
       }
       break;
    case EAST:
       switch(turn_direction){
          case LEFT:
+            usleep( (rand() % 1000000) + 1000000 );
+            sem_post( &quadrant_sem[NE] );
+            usleep( (rand() % 1000000) + 1000000 );
+            sem_post( &quadrant_sem[NW] );
+            usleep( (rand() % 1000000) + 1000000 );
+            sem_post( &quadrant_sem[SW] );
             break;
          case RIGHT:
+            usleep( (rand() % 1000000) + 1000000 );
+            sem_post( &quadrant_sem[NE] );
             break;
          case STRAIGHT:
+            usleep( (rand() % 1000000) + 1000000 );
+            sem_post( &quadrant_sem[NE] );
+            usleep( (rand() % 1000000) + 1000000 );
+            sem_post( &quadrant_sem[NW] );
             break;
       }
       break;
    case WEST:
       switch(turn_direction){
          case LEFT:
+            usleep( (rand() % 1000000) + 1000000 );
+            sem_post( &quadrant_sem[SW] );
+            usleep( (rand() % 1000000) + 1000000 );
+            sem_post( &quadrant_sem[SE] );
+            usleep( (rand() % 1000000) + 1000000 );
+            sem_post( &quadrant_sem[NE] );
             break;
          case RIGHT:
+            usleep( (rand() % 1000000) + 1000000 );
+            sem_post( &quadrant_sem[SW] );
             break;
          case STRAIGHT:
+            usleep( (rand() % 1000000) + 1000000 );
+            sem_post( &quadrant_sem[SW] );
+            usleep( (rand() % 1000000) + 1000000 );
+            sem_post( &quadrant_sem[SE] );
             break;
       }
       break;
