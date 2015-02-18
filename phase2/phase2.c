@@ -11,8 +11,7 @@ void turn_car(car *vehicle, int turn_direction);
 void *queue_dispatcher(void *direction){
 	long int from_direction = (long int) direction;
 	while(TRUE){
-		//sem_wait(&queue_sem[from_direction]);
-		//sem_post(&queue_sem[from_direction]);
+
 	}
 }
 
@@ -76,6 +75,21 @@ void *drive(void* automobile){
       usleep( (rand() % 3000000) + 1000000 );
 
 	}
+}
+
+void remove_job(car *vehicle){
+	car *queue = direction_queue[vehicle -> from_direction];
+   if( vehicle -> previous != NULL){
+      (vehicle -> previous) -> next = (vehicle -> next);
+      if( vehicle -> next != NULL){
+         (vehicle -> next) -> previous = (vehicle -> previous);
+      }
+   } else{
+      queue -> next = vehicle -> next;
+      if(vehicle -> next != NULL){
+         (vehicle -> next) -> previous = NULL;
+      }
+   }
 }
 
 //Add a thread to the provided queue
