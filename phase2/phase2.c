@@ -15,7 +15,6 @@ void *queue_dispatcher(void *direction){
 	while(TRUE){
 		car *queue = direction_queue[from_direction];
 		car *next = get_next_eligible_car(queue);
-		sleep(1);
 		if( next != NULL){
 			sem_post( (next -> sem) );
 		}
@@ -44,7 +43,7 @@ void *drive(void* automobile){
    car *vehicle = (car *)automobile; 
    while(TRUE){
       int from_direction = vehicle -> from_direction;
-      //Wake up the appropriate intersection
+      //Unlock the appropriate direction
       sem_post(&(direction_sem[from_direction]));
       add_car(vehicle);
       switch(from_direction){
@@ -65,26 +64,25 @@ void *drive(void* automobile){
       int turn_direction = (rand() % 3);
       switch(turn_direction){
          case LEFT:
-            printf("Car %d has entered the intersection and wants to turn left\n", vehicle->id);
+            printf(KRED "Car %d has arrived at the intersection and wants to turn left\n" RESET, vehicle->id);
             break;
          case RIGHT:
-            printf("Car %d has entered the intersection and wants to turn right\n", vehicle->id);
+            printf(KRED "Car %d has arrived at the intersection and wants to turn right\n" RESET, vehicle->id);
             break;
          case STRAIGHT:
-            printf("Car %d has entered the intersection and wants to continue straight\n", vehicle->id);
+            printf(KRED "Car %d has arrived at the intersection and wants to continue straight\n" RESET, vehicle->id);
             break;
       }
 
       int status = 0;
-      while(status == 0)
-      {
-         if(status == 0)
-            pthread_yield();
-         status = check_intersection(vehicle, turn_direction);
-      }
-      turn_car(vehicle, turn_direction);
+      do{
+      	status = check_intersection(vehicle, turn_direction);
+      } while(status == 0);
 
+      turn_car(vehicle, turn_direction);
+      remove_car( vehicle );
       usleep( (rand() % 3000000) + 1000000 );
+      printf(KBLU "Car %d left the intersection\n" RESET, vehicle -> id);
 
 	}
 }
@@ -133,7 +131,7 @@ int main(){
 	for(direction = 0; direction < 4; direction++){
       sem_init(&direction_sem[direction], 0, 0);
       sem_init(&queue_sem[direction], 0, 0);
-      sem_init(&quadrant_sem[direction], 0, 0);
+      sem_init(&quadrant_sem[direction], 0, 1);
       direction_queue[direction] = (car *)malloc(sizeof(car));
       direction_queue[direction] -> id = direction;
       pthread_create(&queue_thread[direction], NULL, queue_dispatcher, (void *)direction);
@@ -146,7 +144,7 @@ int main(){
 		queue = (car *)malloc( sizeof(car) );
 		car *vehicle = create_car(index);
 		pthread_create(&threads[index], NULL, drive,(void*)vehicle);
-		usleep(rand() % 2000000);  
+		usleep(rand() % 200000);  
 	}
 
 	while(TRUE){
@@ -300,6 +298,7 @@ WEST | SW | SE |
          if( !sem_trywait( &quadrant_sem[NW] ) 
             && !sem_trywait( &quadrant_sem[SW] ) 
             && !sem_trywait( &quadrant_sem[SE] ) ){ return 1;} else {return 0;}
+            printf("Car %d took the intersection\n", vehicle -> id);
             break;
          case RIGHT:
          if( !sem_trywait( &quadrant_sem[NW] ) ){ return 1;} else {return 0;}
@@ -307,6 +306,7 @@ WEST | SW | SE |
          case STRAIGHT:
          if( !sem_trywait( &quadrant_sem[NW] ) 
             && !sem_trywait( &quadrant_sem[SW] ) ){ return 1;} else {return 0;}
+            printf("Car %d took the intersection\n", vehicle -> id);
             break;
       }
       break;
@@ -316,6 +316,7 @@ WEST | SW | SE |
          if( !sem_trywait( &quadrant_sem[SE] ) 
             && !sem_trywait( &quadrant_sem[NE] ) 
             && !sem_trywait( &quadrant_sem[NW] ) ){ return 1;} else {return 0;}
+            printf("Car %d took the intersection\n", vehicle -> id);
             break;
          case RIGHT:
          if( !sem_trywait( &quadrant_sem[SE] ) ){ return 1;} else {return 0;}
@@ -323,6 +324,7 @@ WEST | SW | SE |
          case STRAIGHT:
          if( !sem_trywait( &quadrant_sem[SE] ) 
             && !sem_trywait( &quadrant_sem[NE] ) ){ return 1;} else {return 0;}
+            printf("Car %d took the intersection\n", vehicle -> id);
             break;
       }
       break;
@@ -332,6 +334,7 @@ WEST | SW | SE |
          if( !sem_trywait( &quadrant_sem[NE] ) 
             && !sem_trywait( &quadrant_sem[NW] ) 
             && !sem_trywait( &quadrant_sem[SW] ) ){ return 1;} else {return 0;}
+            printf("Car %d took the intersection\n", vehicle -> id);
             break;
          case RIGHT:
          if( !sem_trywait( &quadrant_sem[NE] ) ){ return 1;} else {return 0;}
@@ -339,6 +342,7 @@ WEST | SW | SE |
          case STRAIGHT:
          if( !sem_trywait( &quadrant_sem[NE] ) 
             && !sem_trywait( &quadrant_sem[NW] ) ){ return 1;} else {return 0;}
+            printf("Car %d took the intersection\n", vehicle -> id);
             break;
       }
       break;
