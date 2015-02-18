@@ -6,13 +6,25 @@
 #include "phase2.h"
 void print_queue(car* queue);
 void add_car(car *vehicle);
+void remove_car(car *vehicle);
 void turn_car(car *vehicle, int turn_direction);
+car *get_next_eligible_car(car *queue);
 
 void *queue_dispatcher(void *direction){
 	long int from_direction = (long int) direction;
 	while(TRUE){
-
+		car *queue = direction_queue[from_direction];
+		car *next = get_next_eligible_car(queue);
+		sleep(1);
+		if( next != NULL){
+			sem_post( (next -> sem) );
+		}
 	}
+}
+
+car *get_next_eligible_car(car *queue){
+   car *current = queue;
+   return current -> next;
 }
 
 //Initializes a new car with the given params
@@ -37,16 +49,16 @@ void *drive(void* automobile){
       add_car(vehicle);
       switch(from_direction){
          case NORTH:
-            printf("Car %d has arrived at the intersection from the North\n", vehicle->id);
+            printf("Car %d is heading towards intersection from the North\n", vehicle->id);
             break;
          case SOUTH:
-            printf("Car %d has arrived at the intersection from the South\n", vehicle->id);
+            printf("Car %d is heading towards intersection from the South\n", vehicle->id);
             break;
          case EAST:
-            printf("Car %d has arrived at the intersection from the East\n", vehicle->id);
+            printf("Car %d is heading towards intersection from the East\n", vehicle->id);
             break;
          case WEST:
-            printf("Car %d has arrived at the intersection from the West\n", vehicle->id);
+            printf("Car %d is heading towards intersection from the West\n", vehicle->id);
             break;
       }
       sem_wait(vehicle -> sem);
@@ -77,7 +89,7 @@ void *drive(void* automobile){
 	}
 }
 
-void remove_job(car *vehicle){
+void remove_car(car *vehicle){
 	car *queue = direction_queue[vehicle -> from_direction];
    if( vehicle -> previous != NULL){
       (vehicle -> previous) -> next = (vehicle -> next);
@@ -123,7 +135,8 @@ int main(){
       sem_init(&queue_sem[direction], 0, 0);
       sem_init(&quadrant_sem[direction], 0, 0);
       direction_queue[direction] = (car *)malloc(sizeof(car));
-		pthread_create(&queue_thread[direction], NULL, queue_dispatcher, (void *)direction);
+      direction_queue[direction] -> id = direction;
+      pthread_create(&queue_thread[direction], NULL, queue_dispatcher, (void *)direction);
 	}
 
 	//Make our worker threads and add them to the queue
@@ -133,7 +146,11 @@ int main(){
 		queue = (car *)malloc( sizeof(car) );
 		car *vehicle = create_car(index);
 		pthread_create(&threads[index], NULL, drive,(void*)vehicle);
-		usleep(rand() % 100000);  
+		usleep(rand() % 2000000);  
+	}
+
+	while(TRUE){
+
 	}
 }
 
@@ -146,6 +163,7 @@ void print_queue(car* queue){
       return;
    }
    int i;
+   printf("\nDirection is %d\n", queue -> id);
    while(current -> next != NULL){
       current = current->next;
       printf(KCYN "Car %d" RESET, current->id);
